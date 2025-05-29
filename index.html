@@ -239,7 +239,7 @@
       }
 
       if (length < guaranteedChars.length) {
-        return { error: Length should be at least ${guaranteedChars.length} to include all selected character types. };
+        return { error: 'Length should be at least ${guaranteedChars.length} to include all selected character types.' };
       }
 
       let passwordChars = [...guaranteedChars];
