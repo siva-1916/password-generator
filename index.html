@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Professional Password Generator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+  :root {
+    --primary-color: #0077b6;
+    --accent-color: #00b4d8;
+    --background-color: #f7f9fc;
+    --text-color: #333;
+    --border-radius: 12px;
+    --transition-speed: 0.3s;
+    --box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
+  }
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 20px;
+  }
+  main {
+    background: white;
+    padding: 32px 36px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  h1 {
+    margin-bottom: 20px;
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 1.8rem;
+  }
+  label {
+    display: block;
+    text-align: left;
+    margin-bottom: 8px;
+    font-weight: 600;
+    user-select: none;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 1rem;
+    border: 2px solid var(--accent-color);
+    border-radius: var(--border-radius);
+    outline-offset: 3px;
+    transition: border-color var(--transition-speed);
+  }
+  input[type="number"]:focus {
+    border-color: var(--primary-color);
+  }
+  .options {
+    text-align: left;
+    margin: 20px 0 25px 0;
+  }
+  .option-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .option-item input[type="checkbox"] {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+  }
+  button#generate-btn {
+    width: 100%;
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 14px 0;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    box-shadow: var(--box-shadow);
+    transition: background-color var(--transition-speed);
+  }
+  button#generate-btn:hover {
+    background: var(--accent-color);
+  }
+  #password-output {
+    margin-top: 24px;
+    font-size: 1.25rem;
+    font-family: 'Courier New', Courier, monospace;
+    background: #e0f7fa;
+    padding: 14px 18px;
+    border-radius: var(--border-radius);
+    word-break: break-all;
+    user-select: all;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #copy-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-left: 12px;
+    transition: background-color var(--transition-speed);
+  }
+  #copy-btn:hover {
+    background: var(--accent-color);
+  }
+  #message {
+    margin-top: 18px;
+    font-size: 0.9rem;
+    color: #008000;
+    min-height: 1.2em;
+  }
+  .error {
+    color: #d00000;
+  }
+  @media (max-width: 420px) {
+    main {
+      padding: 28px 20px;
+    }
+  }
+</style>
+</head>
+<body>
+<main role="main" aria-label="Password Generator">
+  <h1>Password Generator</h1>
+  <form id="password-form" onsubmit="return false">
+    <label for="length">Password Length</label>
+    <input
+      type="number"
+      id="length"
+      name="length"
+      min="6"
+      max="128"
+      value="16"
+      aria-describedby="length-desc"
+      required
+    />
+    <div id="length-desc" style="font-size:0.85rem; color:#555; margin-bottom: 12px;">
+      Choose length between 6 and 128 characters
+    </div>
+
+    <div class="options" role="group" aria-labelledby="criteria-label">
+      <div id="criteria-label" style="font-weight:600; margin-bottom:10px;">Include Characters:</div>
+      <div class="option-item">
+        <input type="checkbox" id="uppercase" checked />
+        <label for="uppercase">Uppercase Letters (A-Z)</label>
+      </div>
+      <div class="option-item">
+        <input type="checkbox" id="lowercase" checked />
+        <label for="lowercase">Lowercase Letters (a-z)</label>
+      </div>
+      <div class="option-item">
+        <input type="checkbox" id="numbers" checked />
+        <label for="numbers">Numbers (0-9)</label>
+      </div>
+      <div class="option-item">
+        <input type="checkbox" id="special" />
+        <label for="special">Special Characters (!@#$%^&*)</label>
+      </div>
+    </div>
+    <button id="generate-btn" aria-describedby="message">Generate Password</button>
+  </form>
+
+  <div id="password-output" aria-live="polite" aria-atomic="true" tabindex="0" aria-label="Generated password will appear here">
+    <!-- Generated password appears here -->
+  </div>
+
+  <button id="copy-btn" aria-label="Copy password to clipboard" title="Copy Password" style="display:none;">Copy</button>
+  <div id="message" role="alert" aria-live="assertive"></div>
+</main>
+
+<script>
+  (() => {
+    const form = document.getElementById('password-form');
+    const lengthInput = document.getElementById('length');
+    const uppercaseCheckbox = document.getElementById('uppercase');
+    const lowercaseCheckbox = document.getElementById('lowercase');
+    const numbersCheckbox = document.getElementById('numbers');
+    const specialCheckbox = document.getElementById('special');
+    const generateBtn = document.getElementById('generate-btn');
+    const passwordOutput = document.getElementById('password-output');
+    const copyBtn = document.getElementById('copy-btn');
+    const messageDiv = document.getElementById('message');
+
+    const CHAR_SETS = {
+      uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      lowercase: "abcdefghijklmnopqrstuvwxyz",
+      numbers: "0123456789",
+      special: "!@#$%^&*()-_=+[]{}|;:'\",.<>?/`~"
+    };
+
+    // Utility: get a random character from a string
+    function getRandomChar(str) {
+      const index = Math.floor(Math.random() * str.length);
+      return str[index];
+    }
+
+    // Password generator function
+    function generatePassword(length, options) {
+      let allChars = "";
+      let guaranteedChars = [];
+
+      if (options.uppercase) {
+        allChars += CHAR_SETS.uppercase;
+        guaranteedChars.push(getRandomChar(CHAR_SETS.uppercase));
+      }
+      if (options.lowercase) {
+        allChars += CHAR_SETS.lowercase;
+        guaranteedChars.push(getRandomChar(CHAR_SETS.lowercase));
+      }
+      if (options.numbers) {
+        allChars += CHAR_SETS.numbers;
+        guaranteedChars.push(getRandomChar(CHAR_SETS.numbers));
+      }
+      if (options.special) {
+        allChars += CHAR_SETS.special;
+        guaranteedChars.push(getRandomChar(CHAR_SETS.special));
+      }
+
+      if (allChars.length === 0) {
+        return { error: 'Select at least one character type.' };
+      }
+
+      if (length < guaranteedChars.length) {
+        return { error: Length should be at least ${guaranteedChars.length} to include all selected character types. };
+      }
+
+      let passwordChars = [...guaranteedChars];
+
+      for (let i = guaranteedChars.length; i < length; i++) {
+        passwordChars.push(getRandomChar(allChars));
+      }
+
+      // Shuffle using Fisher-Yates algorithm
+      for (let i = passwordChars.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
+      }
+
+      return { password: passwordChars.join('') };
+    }
+
+    function clearMessage() {
+      messageDiv.textContent = "";
+      messageDiv.classList.remove('error');
+    }
+
+    function showError(msg) {
+      messageDiv.textContent = msg;
+      messageDiv.classList.add('error');
+      passwordOutput.textContent = "";
+      copyBtn.style.display = 'none';
+    }
+
+    function showSuccess(msg) {
+      messageDiv.textContent = msg;
+      messageDiv.classList.remove('error');
+    }
+
+    function updatePassword() {
+      clearMessage();
+      const length = parseInt(lengthInput.value, 10);
+      const options = {
+        uppercase: uppercaseCheckbox.checked,
+        lowercase: lowercaseCheckbox.checked,
+        numbers: numbersCheckbox.checked,
+        special: specialCheckbox.checked
+      };
+
+      if (Number.isNaN(length) || length < 6 || length > 128) {
+        showError('Password length must be between 6 and 128.');
+        return;
+      }
+
+      const result = generatePassword(length, options);
+
+      if (result.error) {
+        showError(result.error);
+        return;
+      }
+
+      passwordOutput.textContent = result.password;
+      passwordOutput.focus();
+      copyBtn.style.display = 'inline-block';
+      showSuccess('Password generated successfully!');
+    }
+
+    // Copy password to clipboard
+    copyBtn.addEventListener('click', () => {
+      const password = passwordOutput.textContent;
+      if (!password) {
+        showError('No password to copy.');
+        return;
+      }
+      navigator.clipboard.writeText(password).then(() => {
+        showSuccess('Password copied to clipboard!');
+      }).catch(() => {
+        showError('Failed to copy password.');
+      });
+    });
+
+    generateBtn.addEventListener('click', updatePassword);
+
+    // Generate initial password on page load
+    updatePassword();
+
+  })();
+</script>
+</body>
+</html>
